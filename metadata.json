@@ -1,0 +1,6 @@
+{
+  "name": "Aureon Motors",
+  "description": "Bilingual (Russian & Uzbek) luxury car dealership showcase with a live SQLite3-backed Admin Panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
