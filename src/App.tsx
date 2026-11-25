@@ -29,8 +29,8 @@ export default function App() {
   );
   const [data, setData] = useState<StorefrontPayload | null>(null);
   const [error, setError] = useState('');
-  const [bookingCar, setBookingCar] = useState<Car | null>(null);
-  const [bookingMarketItem, setBookingMarketItem] = useState<MarketItem | null>(null);
+  const [bookingCar, setBookingCar] = useState<{ car: Car; ts: number } | null>(null);
+  const [bookingMarketItem, setBookingMarketItem] = useState<{ item: MarketItem; ts: number } | null>(null);
 
   const openAdmin = useCallback(() => {
     window.history.pushState({}, '', '/admin');
@@ -98,13 +98,13 @@ export default function App() {
   };
 
   const handleSelectCarForBooking = (car: Car) => {
-    setBookingCar(car);
+    setBookingCar({ car, ts: Date.now() });
     const el = document.getElementById('contact');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSelectMarketItem = (item: MarketItem) => {
-    setBookingMarketItem(item);
+    setBookingMarketItem({ item, ts: Date.now() });
     const el = document.getElementById('contact');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };

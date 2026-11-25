@@ -13,6 +13,7 @@ import {
   Check,
   X,
   Lock,
+  RefreshCw,
 } from 'lucide-react';
 import type {
   AsideOffer,
@@ -134,8 +135,8 @@ export function AdminPanel({
     setTimeout(() => setToast(''), 3000);
   };
 
-  const fetchAdminData = async (authToken: string) => {
-    setLoading(true);
+  const fetchAdminData = async (authToken: string, silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const headers = { 'x-admin-token': authToken };
       const [carsRes, marketRes, offersRes, leadsRes] = await Promise.all([
@@ -158,14 +159,17 @@ export function AdminPanel({
       setOffers(offersData.offers || []);
       setLeads(leadsData.leads || []);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (token) {
-      fetchAdminData(token);
-    }
+    if (!token) return;
+    fetchAdminData(token);
+    const intervalId = setInterval(() => {
+      fetchAdminData(token, true);
+    }, 5000);
+    return () => clearInterval(intervalId);
   }, [token]);
 
   const handleLogin = async (e: FormEvent) => {
@@ -445,6 +449,8 @@ export function AdminPanel({
     );
   }
 
+  const newLeadsCount = leads.filter((l) => l.status === 'new').length;
+
   const navItems: { id: AdminTab; label: string; icon: typeof CarIcon; badge?: number }[] = [
     { id: 'cars', label: t.admin.tabs.cars, icon: CarIcon, badge: cars.length },
     { id: 'market', label: t.admin.tabs.market, icon: ShoppingBag, badge: marketItems.length },
@@ -452,7 +458,7 @@ export function AdminPanel({
       id: 'users',
       label: t.admin.tabs.users,
       icon: Users,
-      badge: leads.length,
+      badge: newLeadsCount > 0 ? newLeadsCount : leads.length,
     },
     { id: 'content', label: t.admin.tabs.content, icon: FileEdit },
     { id: 'aside', label: t.admin.tabs.aside, icon: LayoutList, badge: offers.length },
@@ -824,6 +830,14 @@ export function AdminPanel({
                     <option value="market">{t.requestTypes.market}</option>
                     <option value="trade-in">{t.requestTypes['trade-in']}</option>
                   </select>
+                  <button
+                    type="button"
+                    onClick={() => fetchAdminData(token)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-white border border-stone-200 hover:border-stone-400 rounded-md text-stone-800 cursor-pointer"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>{t.admin.usersTab.refresh}</span>
+                  </button>
                 </div>
               </div>
 
@@ -979,6 +993,11 @@ export function AdminPanel({
                     onChange={(v) => setSettingsForm({ ...settingsForm, hours_ru: v })}
                   />
                 </div>
+                <Field
+                  label="Telegram Channel URL (e.g. https://t.me/your_channel)"
+                  value={settingsForm.telegram_url || ''}
+                  onChange={(v) => setSettingsForm({ ...settingsForm, telegram_url: v })}
+                />
               </div>
 
               <div className="bg-white border border-stone-200 rounded-lg p-6 space-y-4">

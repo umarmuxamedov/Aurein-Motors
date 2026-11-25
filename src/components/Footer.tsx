@@ -1,3 +1,4 @@
+import { Send, ArrowUpRight } from 'lucide-react';
 import type { Language, SiteSettings } from '../types';
 import { UI_COPY } from '../i18n/translations';
 
@@ -8,9 +9,19 @@ interface FooterProps {
   onSecretAdmin: () => void;
 }
 
+function normalizeTelegramUrl(raw?: string): string {
+  const val = (raw || '').trim();
+  if (!val) return 'https://t.me/aureonmotors';
+  if (val.startsWith('http://') || val.startsWith('https://')) return val;
+  if (val.startsWith('@')) return `https://t.me/${val.slice(1)}`;
+  if (val.startsWith('t.me/')) return `https://${val}`;
+  return `https://t.me/${val}`;
+}
+
 export function Footer({ settings, lang, onChangeLang, onSecretAdmin }: FooterProps) {
   const t = UI_COPY[lang];
   const note = lang === 'uz' ? settings.footer_note_uz : settings.footer_note_ru;
+  const telegramHref = normalizeTelegramUrl(settings.telegram_url);
 
   return (
     <footer className="bg-[#0C0D10] text-stone-300 border-t border-stone-800">
@@ -72,14 +83,27 @@ export function Footer({ settings, lang, onChangeLang, onSecretAdmin }: FooterPr
             </div>
           </div>
 
-          <div className="md:col-span-4 space-y-2.5 text-sm">
+          <div className="md:col-span-4 space-y-3 text-sm">
             <div className="text-xs font-semibold text-stone-400 mb-3">
               {t.footer.showroom}
             </div>
             <div className="font-mono text-white tabular-nums">{settings.phone}</div>
             <div className="text-stone-400">{settings.email}</div>
-            <div className="text-stone-400 text-xs pt-1">
+            <div className="text-stone-400 text-xs">
               {t.footer.hoursLabel}: {lang === 'uz' ? settings.hours_uz : settings.hours_ru}
+            </div>
+
+            <div className="pt-2">
+              <a
+                href={telegramHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2.5 px-4 py-2.5 rounded-md bg-white/10 hover:bg-[#229ED9] text-white border border-white/15 hover:border-[#229ED9] text-xs font-semibold transition-colors duration-200 whitespace-nowrap"
+              >
+                <Send className="w-3.5 h-3.5 shrink-0" />
+                <span>{t.footer.telegramBtn}</span>
+                <ArrowUpRight className="w-3.5 h-3.5 shrink-0" />
+              </a>
             </div>
           </div>
         </div>

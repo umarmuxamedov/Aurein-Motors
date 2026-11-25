@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, X } from 'lucide-react';
 import type { Car, Language, MarketItem, RequestType } from '../types';
 import { UI_COPY } from '../i18n/translations';
 
@@ -7,8 +7,8 @@ interface ContactSectionProps {
   cars: Car[];
   marketItems: MarketItem[];
   lang: Language;
-  preselectedCar: Car | null;
-  preselectedMarketItem: MarketItem | null;
+  preselectedCar: { car: Car; ts: number } | null;
+  preselectedMarketItem: { item: MarketItem; ts: number } | null;
 }
 
 export function ContactSection({
@@ -38,19 +38,23 @@ export function ContactSection({
 
   useEffect(() => {
     if (preselectedCar) {
-      setCarId(String(preselectedCar.id));
-      setRequestType('test-drive');
+      setSubmitted(false);
+      setCarId(String(preselectedCar.car.id));
+      setRequestType('purchase');
     }
   }, [preselectedCar]);
 
   useEffect(() => {
     if (preselectedMarketItem) {
-      const title =
-        lang === 'uz' ? preselectedMarketItem.title_uz : preselectedMarketItem.title_ru;
-      setMarketItemName(`${preselectedMarketItem.sku} — ${title}`);
+      setSubmitted(false);
+      const item = preselectedMarketItem.item;
+      const title = lang === 'uz' ? item.title_uz : item.title_ru;
+      setMarketItemName(`${item.sku} — ${title}`);
       setRequestType('market');
     }
   }, [preselectedMarketItem, lang]);
+
+  const selectedCarObj = cars.find((item) => String(item.id) === carId);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -61,7 +65,6 @@ export function ContactSection({
       return;
     }
 
-    const chosenCar = cars.find((item) => String(item.id) === carId);
     setSubmitting(true);
     try {
       const res = await fetch('/api/leads', {
@@ -73,8 +76,10 @@ export function ContactSection({
           email: email.trim(),
           city: city.trim(),
           request_type: requestType,
-          car_id: chosenCar ? chosenCar.id : null,
-          car_name: chosenCar ? `${chosenCar.brand} ${chosenCar.name}` : '',
+          car_id: selectedCarObj ? selectedCarObj.id : null,
+          car_name: selectedCarObj
+            ? `${selectedCarObj.brand} ${selectedCarObj.name} ($${selectedCarObj.price_usd.toLocaleString('en-US')})`
+            : '',
           market_item_name: marketItemName,
           preferred_date: preferredDate,
           budget_usd: budgetUsd.trim(),
@@ -89,6 +94,8 @@ export function ContactSection({
       setPhone('');
       setEmail('');
       setCity('');
+      setCarId('');
+      setMarketItemName('');
       setPreferredDate('');
       setBudgetUsd('');
       setTradeInInfo('');
@@ -141,6 +148,36 @@ export function ContactSection({
                 onSubmit={handleSubmit}
                 className="bg-white border border-stone-200 rounded-lg p-6 sm:p-8 space-y-5"
               >
+                {/* Selected Order Summary Banner */}
+                {(selectedCarObj || marketItemName) && (
+                  <div className="p-3.5 bg-stone-50 border border-stone-200 rounded-md flex items-center justify-between gap-3 text-xs">
+                    <div className="text-stone-800">
+                      <span className="font-semibold text-red-800">{c.selectedBanner}:</span>{' '}
+                      <span className="font-medium">
+                        {[
+                          selectedCarObj
+                            ? `${selectedCarObj.brand} ${selectedCarObj.name} ($${selectedCarObj.price_usd.toLocaleString('en-US')})`
+                            : '',
+                          marketItemName,
+                        ]
+                          .filter(Boolean)
+                          .join(' + ')}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCarId('');
+                        setMarketItemName('');
+                      }}
+                      aria-label={c.clearSelection}
+                      className="text-stone-500 hover:text-stone-900 p-1 cursor-pointer shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Request Type Segmented Control */}
                 <div>
                   <span className="block text-xs font-semibold text-stone-700 mb-2">

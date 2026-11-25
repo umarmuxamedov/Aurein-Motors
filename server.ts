@@ -48,6 +48,7 @@ function initDatabase() {
       hours_ru TEXT NOT NULL,
       footer_note_uz TEXT NOT NULL,
       footer_note_ru TEXT NOT NULL,
+      telegram_url TEXT DEFAULT 'https://t.me/aureonmotors',
       updated_at TEXT NOT NULL
     );
 
@@ -138,6 +139,11 @@ function initDatabase() {
     }
   }
 
+  const settingsCols = db.prepare('PRAGMA table_info(site_settings)').all() as { name: string }[];
+  if (!settingsCols.some((c) => c.name === 'telegram_url')) {
+    db.exec("ALTER TABLE site_settings ADD COLUMN telegram_url TEXT DEFAULT 'https://t.me/aureonmotors'");
+  }
+
   const settingsCount = db.prepare('SELECT COUNT(*) as count FROM site_settings').get() as { count: number };
   if (settingsCount.count === 0) {
     db.prepare(`
@@ -156,6 +162,7 @@ function initDatabase() {
         address_uz, address_ru,
         hours_uz, hours_ru,
         footer_note_uz, footer_note_ru,
+        telegram_url,
         updated_at
       ) VALUES (
         1, 'Aureon Motors',
@@ -172,6 +179,7 @@ function initDatabase() {
         'Toshkent sh., Amir Temur shoh ko''chasi, 108', 'г. Ташкент, проспект Амира Темура, 108',
         'Dushanba – Yakshanba: 09:00 – 21:00', 'Пн – Вс: 09:00 – 21:00',
         'Aureon Motors. Barcha huquqlar himoyalangan.', 'Aureon Motors. Все права защищены.',
+        'https://t.me/aureonmotors',
         ?
       )
     `).run(new Date().toISOString());
@@ -425,6 +433,7 @@ async function startServer() {
           address_uz = ?, address_ru = ?,
           hours_uz = ?, hours_ru = ?,
           footer_note_uz = ?, footer_note_ru = ?,
+          telegram_url = ?,
           updated_at = ?
         WHERE id = 1
       `).run(
@@ -442,6 +451,7 @@ async function startServer() {
         b.address_uz, b.address_ru,
         b.hours_uz, b.hours_ru,
         b.footer_note_uz, b.footer_note_ru,
+        b.telegram_url || 'https://t.me/aureon_motors',
         new Date().toISOString()
       );
       const updated = db.prepare('SELECT * FROM site_settings WHERE id = 1').get();

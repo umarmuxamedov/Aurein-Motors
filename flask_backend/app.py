@@ -85,6 +85,7 @@ def update_settings():
           address_uz = ?, address_ru = ?,
           hours_uz = ?, hours_ru = ?,
           footer_note_uz = ?, footer_note_ru = ?,
+          telegram_url = ?,
           updated_at = ?
         WHERE id = 1
         """,
@@ -103,6 +104,7 @@ def update_settings():
             b.get("address_uz"), b.get("address_ru"),
             b.get("hours_uz"), b.get("hours_ru"),
             b.get("footer_note_uz"), b.get("footer_note_ru"),
+            b.get("telegram_url", "https://t.me/aureonmotors"),
             datetime.now(timezone.utc).isoformat(),
         ),
     )

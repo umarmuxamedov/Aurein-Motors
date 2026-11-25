@@ -37,6 +37,7 @@ export interface SiteSettings {
   hours_ru: string;
   footer_note_uz: string;
   footer_note_ru: string;
+  telegram_url: string;
   updated_at: string;
 }
 
